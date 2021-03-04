@@ -1,0 +1,137 @@
+#pragma once
+
+#include <stdint.h>
+#include <stddef.h>
+
+#ifdef __clpusplus
+extern "C" {
+#endif
+
+struct MemReadWriteCmdHead {
+    uint8_t		cmd;
+    uint8_t		align;
+    uint16_t	byteCount;
+    uint32_t	address;
+};
+
+struct MemReadWriteAnsHead {
+    uint8_t		cmd;
+    uint8_t		byteCount;
+    uint16_t	reserved;
+};
+
+struct RegReadWriteCmdHead {
+    uint8_t 	cmd;
+    uint8_t 	regOffset;
+    uint8_t 	regCount;
+    uint8_t		reserved;
+};
+
+struct RegReadWriteAnsHead {
+    uint8_t 	cmd;
+    uint8_t 	regOffset;
+    uint8_t 	regCount;
+    uint8_t		reserved;
+};
+
+struct HaltResumeCmdHead {
+    uint8_t cmd;
+    uint8_t step;
+};
+
+struct HaltResumeAnsHead {
+    uint8_t cmd;
+    uint8_t step;
+};
+
+struct BreakpointCmdHead {
+    uint8_t cmd;
+    uint8_t type;
+    uint8_t set;
+    uint8_t reserved;
+    uint32_t address;
+};
+
+struct BreakpointAnsHead {
+    uint8_t cmd;
+    uint8_t type;
+    uint8_t set;
+    uint8_t status;
+    uint32_t address;
+};
+
+struct FlashEraseCmdHead {
+    uint8_t cmd;
+    uint8_t reserved;
+    uint16_t size;
+    uint32_t address;
+};
+
+struct FlashEraseAnsHead {
+    uint8_t cmd;
+    uint8_t status;
+    uint8_t reserved;
+    uint16_t size;
+    uint32_t address;
+};
+
+struct FlashWriteCmdHead {
+    uint8_t  cmd;
+    uint8_t  reserved;
+    uint16_t size;
+    uint32_t address;
+};
+
+struct FlashWriteAnsHead {
+    uint8_t cmd;
+    uint8_t  status;
+    uint16_t size;
+    uint32_t address;
+};
+
+
+#define HALT_RUNNING    0
+#define HALT_ERROR      1
+#define HALT_REQUEST    2
+#define HALT_STEPPING   3
+#define HALT_BREAKPOINT 4
+#define HALT_WATCHPOINT 5
+#define HALT_FAULT      6
+
+#define BREAK_SOFT      0
+#define BREAK_HARD      1
+#define WATCH_WRITE     2
+#define WATCH_READ      3
+#define WATCH_ACCESS    4
+
+#define DBG_CMD_MEM_READ		0x01
+#define DBG_CMD_MEM_WRITE		0x02
+#define DBG_CMD_REG_READ		0x03
+#define DBG_CMD_REG_WRITE		0x04
+#define DBG_CMD_HALT_RESUME		0x05
+#define DBG_CMD_HALT_REQUEST	0x06
+#define DBG_CMD_HALT_POLL	    0x07
+#define DBG_CMD_BREAKPOINT      0x08
+#define DBG_CMD_FLASH_ERASE     0x09
+#define DBG_CMD_FLASH_WRITE     0x0A
+#define DBG_CMD_ATTACH          0x0B
+#define DBG_CMD_DETACH          0x0C
+#define DBG_CMD_FLASH_DONE		0x0D
+#define DBG_CMD_RESET		    0x0E
+
+#define DBG_MAX_FRAME_SIZE		64
+
+
+
+size_t readRegCmd( uint8_t regIndex, uint8_t count, uint8_t* buffer );
+size_t writeRegCmd( uint8_t regIndex, uint8_t count, uint8_t* buffer );
+size_t readMemCmd( uint32_t address, uint16_t size, uint8_t* buffer );
+size_t writeMemCmd( uint32_t address, uint16_t size, uint8_t* buffer );
+size_t haltResumeCmd(uint8_t step, uint8_t* buffer);
+size_t breakpointCmd(uint32_t address, uint8_t type, uint8_t set, uint8_t* buffer);
+size_t flashEraseCmd(uint32_t address, uint16_t size, uint8_t* buffer);
+size_t flashWriteCmd(uint32_t address, uint8_t* data, uint16_t size, uint8_t* buffer);
+
+#ifdef __clpusplus
+}
+#endif

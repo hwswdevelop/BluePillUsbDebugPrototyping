@@ -1,0 +1,101 @@
+
+#include "DbgCommands.h"
+
+size_t readRegCmd(uint8_t regIndex, uint8_t count, uint8_t* buffer) {
+    struct RegReadWriteCmdHead* head = (struct RegReadWriteCmdHead*)buffer;
+    head->cmd = DBG_CMD_REG_READ;
+    head->regOffset = regIndex;
+    head->regCount = count;
+    head->reserved = 0;
+    return sizeof(struct RegReadWriteCmdHead);
+}
+
+size_t writeRegCmd(uint8_t regIndex, uint8_t count, uint8_t* buffer) {
+    struct RegReadWriteCmdHead* head = (struct RegReadWriteCmdHead*)buffer;
+    head->cmd = DBG_CMD_REG_WRITE;
+    head->regOffset = regIndex;
+    head->regCount = count;
+    head->reserved = 0;
+    return sizeof(struct RegReadWriteCmdHead);
+}
+
+size_t readMemCmd(uint32_t address, uint16_t size, uint8_t* buffer) {
+    struct MemReadWriteCmdHead* head = (struct MemReadWriteCmdHead*)buffer;
+    uint16_t maxRequestedByteCount = (DBG_MAX_FRAME_SIZE - sizeof(struct MemReadWriteAnsHead));
+    uint16_t bytesRequested = (maxRequestedByteCount < size) ? maxRequestedByteCount : size;
+
+    uint8_t addrAlignMask = ((address - 1) ^ address) & 0x07;
+    uint8_t countAlignMask = ((bytesRequested - 1) ^ bytesRequested) & 0x07;
+    uint8_t align = addrAlignMask & countAlignMask;
+
+    align |= align >> 1;
+    align |= align >> 2;
+    align += 1;
+    align >>= 1;
+
+    head->cmd = DBG_CMD_MEM_READ;
+    head->align = align;
+    head->byteCount = bytesRequested;
+    head->address = address;
+
+    return sizeof(struct MemReadWriteCmdHead);
+}
+
+size_t writeMemCmd(uint32_t address, uint16_t size, uint8_t* buffer) {
+    struct MemReadWriteCmdHead* head = (struct MemReadWriteCmdHead*)buffer;
+    uint16_t maxRequestedByteCount = (DBG_MAX_FRAME_SIZE - sizeof(struct MemReadWriteCmdHead));
+    uint16_t bytesRequested = (maxRequestedByteCount < size) ? maxRequestedByteCount : size;
+
+    uint8_t addrAlignMask = ((address - 1) ^ address) & 0x07;
+    uint8_t countAlignMask = ((bytesRequested - 1) ^ bytesRequested) & 0x07;
+    uint8_t align = addrAlignMask & countAlignMask;
+
+    align |= align >> 1;
+    align |= align >> 2;
+    align += 1;
+    align >>= 1;
+
+    head->cmd = DBG_CMD_MEM_WRITE;
+    head->align = align;
+    head->byteCount = bytesRequested;
+    head->address = address;
+
+    return sizeof(struct MemReadWriteCmdHead);
+}
+
+size_t haltResumeCmd(uint8_t step, uint8_t* buffer) {
+    struct HaltResumeCmdHead* head = (struct HaltResumeCmdHead*)buffer;
+    head->cmd = DBG_CMD_HALT_RESUME;
+    head->step = step;
+    return sizeof(struct HaltResumeCmdHead); 
+}
+
+size_t breakpointCmd(uint32_t address, uint8_t type, uint8_t set, uint8_t* buffer) {
+    struct BreakpointCmdHead* head = (struct BreakpointCmdHead*)buffer;
+    head->cmd = DBG_CMD_BREAKPOINT;
+    head->address = address;
+    head->type = type;
+    head->set = set;
+    head->reserved = 0;
+    return sizeof(struct BreakpointCmdHead);
+}
+
+
+size_t flashEraseCmd(uint32_t address, uint16_t size, uint8_t* buffer) {
+    struct FlashEraseCmdHead* head = (struct FlashEraseCmdHead*)buffer;
+    head->cmd = DBG_CMD_FLASH_ERASE;
+    head->address = address;
+    head->size = size;
+    head->reserved = 0;
+    return sizeof(struct FlashEraseCmdHead);
+}
+
+size_t flashWriteCmd(uint32_t address, uint8_t* data, uint16_t size, uint8_t* buffer) {
+    struct FlashWriteCmdHead* head = (struct FlashWriteCmdHead*)buffer;
+    uint16_t maxRequestedByteCount = (DBG_MAX_FRAME_SIZE - sizeof(struct FlashWriteCmdHead));
+    head->cmd = DBG_CMD_FLASH_WRITE;
+    head->reserved = 0;
+    head->size = (maxRequestedByteCount < size) ? maxRequestedByteCount : size;
+    head->address = address;
+    return sizeof(struct FlashWriteCmdHead);
+}
