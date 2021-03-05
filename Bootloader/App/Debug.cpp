@@ -125,22 +125,53 @@ void flashEraseLoop(){
 
 
 extern "C"  void DebugHandler(ArmRegisters* regs){
-
+	static uint8_t stepOnThread = 0;
 	static bool exitFromInterrupt = false;
 	bool interruptActive = (regs->xpsr & 0xFF);
 
 	if (interruptActive){
+
+		if (stepOnThread != 0){
+			if ( DFSR & DFSR_BKPT ) {
+				stepOnThread = 0;
+				exitFromInterrupt = false;
+				DEMCR &= ~DEMCR_MON_STEP;
+				asm volatile("movs r0, #0x00; msr BASEPRI, r0; isb;");
+			}
+		}
+
+		if (stepOnThread == 1){
+			stepOnThread = 2;
+			exitFromInterrupt = true;
+			asm volatile("movs r0, #0x30; msr BASEPRI, r0; isb;");
+		}
+
 		if (exitFromInterrupt){
 			DEMCR |= DEMCR_MON_STEP;
 			DEMCR &= ~DEMCR_MON_PEND;
 			return;
 		}
+
 	} else {
+		if (stepOnThread == 2){
+			stepOnThread = 3;
+			DEMCR |= DEMCR_MON_STEP;
+			DEMCR &= ~DEMCR_MON_PEND;
+			return;
+		}
+
+		if (stepOnThread == 3){
+			stepOnThread = 0;
+			asm volatile("movs r0, #0x00; msr BASEPRI, r0; isb;");
+		}
+
 		if (exitFromInterrupt){
 			DEMCR &= ~DEMCR_MON_STEP;
 			exitFromInterrupt = false;
 		}
 	}
+
+	stepOnThread = 0;
 
 	setDebugCode(1);
 
@@ -164,13 +195,16 @@ extern "C"  void DebugHandler(ArmRegisters* regs){
 	do {
 
 		if ( gCmdQueue.get(cmd) ){
+
 			switch(cmd){
 			case DebugHandlerCommand::Halt:
+				 gCmdQueue.pull(cmd);
 				gHaltState = ResetHaltState::Request;
 			break;
 
 			case DebugHandlerCommand::Resume:
 			{
+				gCmdQueue.pull(cmd);
 				DEMCR &= (~DEMCR_MON_STEP);
 				gHaltState = ResetHaltState::Running;
 			}
@@ -179,7 +213,14 @@ extern "C"  void DebugHandler(ArmRegisters* regs){
 			case DebugHandlerCommand::ResumeStep:
 			{
 				// Enable stepping
+				gCmdQueue.pull(cmd);
+				if (!interruptActive){
+					stepOnThread = 1;
+
+				}
+				DFSR |= DFSR_BKPT;
 				DEMCR |= DEMCR_MON_STEP;
+				DEMCR &= ~DEMCR_MON_PEND;
 				gHaltState = ResetHaltState::Running;
 			}
 			break;
@@ -188,6 +229,7 @@ extern "C"  void DebugHandler(ArmRegisters* regs){
 			{
 				setDebugCode(3);
 				if (!interruptActive){
+					gCmdQueue.pull(cmd);
 					debugDisableUserInterrupts();
 					regs->common.pc = (uint32_t)debugLocalLoop;
 					regs->common.lr = regs->common.pc;
@@ -199,6 +241,11 @@ extern "C"  void DebugHandler(ArmRegisters* regs){
 					gHaltState = ResetHaltState::Running;
 					return;
 				} else {
+					exitFromInterrupt = true;
+					DEMCR |= DEMCR_MON_STEP;
+					DEMCR &= ~DEMCR_MON_PEND;
+					return;
+
 					setDebugCode(0x0F);
 					while(true){};
 				}
@@ -209,6 +256,7 @@ extern "C"  void DebugHandler(ArmRegisters* regs){
 			{
 				setDebugCode(3);
 				if (!interruptActive){
+					gCmdQueue.pull(cmd);
 					debugDisableUserInterrupts();
 					regs->common.pc = (uint32_t)flashEraseLoop;
 					regs->common.lr = regs->common.pc;
@@ -218,6 +266,11 @@ extern "C"  void DebugHandler(ArmRegisters* regs){
 					gHaltState = ResetHaltState::Running;
 					return;
 				} else {
+					exitFromInterrupt = true;
+					DEMCR |= DEMCR_MON_STEP;
+					DEMCR &= ~DEMCR_MON_PEND;
+					return;
+
 					setDebugCode(0x0F);
 					while(true){};
 				}
@@ -228,6 +281,7 @@ extern "C"  void DebugHandler(ArmRegisters* regs){
 			{
 				setDebugCode(4);
 				if (!interruptActive){
+					gCmdQueue.pull(cmd);
 					debugDisableUserInterrupts();
 					const uint32_t stackPointer = *(uint32_t*)( userCodeVectorTable );
 					const uint32_t resetAddress = *(uint32_t*)( userCodeVectorTable + resetVectorOffset );
@@ -254,6 +308,11 @@ extern "C"  void DebugHandler(ArmRegisters* regs){
 					}
 
 				} else {
+					exitFromInterrupt = true;
+					DEMCR |= DEMCR_MON_STEP;
+					DEMCR &= ~DEMCR_MON_PEND;
+					return;
+
 					setDebugCode(0x0F);
 					while(true){};
 				}

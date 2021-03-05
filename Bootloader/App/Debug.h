@@ -44,14 +44,17 @@ typedef struct {
 /* DW Control Register */
 #define DW						( (pDWUnit)  0xE0001000 )
 #define FPB						( (pFPBUnit) 0xE0002000 )
+
+/* Debug Fault Status Register */
+#define DFSR					( *(volatile uint32_t*)0xE000ED30 )
 /* Debug Halting Control and Status Register */
-#define DHCSR					( *(uint32_t*)0xE000EDF0 )
+#define DHCSR					( *(volatile uint32_t*)0xE000EDF0 )
 /* Debug Core Register Selector Register */
-#define DCRSR					( *(uint32_t*)0xE000EDF4 )
+#define DCRSR					( *(volatile uint32_t*)0xE000EDF4 )
 /* Debug Core Register Data Register */
-#define DCRDR					( *(uint32_t*)0xE000EDF8 )
+#define DCRDR					( *(volatile uint32_t*)0xE000EDF8 )
 /* Debug Exception and Monitor Control Register */
-#define DEMCR					( *(uint32_t*)0xE000EDFC )
+#define DEMCR					( *(volatile uint32_t*)0xE000EDFC )
 
 #define FP_CTRL_ENABLE			(1 << 0)
 #define FP_CTRL_KEY				(1 << 1)
@@ -65,6 +68,14 @@ typedef struct {
 #define FP_REMAP_REMAP_SHIFT	(5)
 #define FP_REMAP_REMAP_MASK		(0xFFFFFF << FP_REMAP_REMAP_SHIFT)
 #define FP_REMAP_RMPSPT			(1 << 29)
+
+
+/* Debug Fault Status Register */
+#define DFSR_HALTED				(1 << 0)
+#define DFSR_BKPT				(1 << 1)
+#define DFSR_DWTTRAP			(1 << 2)
+#define DFSR_VCATCH				(1 << 3)
+#define DFSR_EXTERNAL			(1 << 4)
 
 /* Debug Halting Control and Status Register */
 #define DHCSR_C_DEBUGEN			(1 << 0)
