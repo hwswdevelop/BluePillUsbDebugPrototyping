@@ -21,13 +21,13 @@ struct CircularBuffer {
 	bool get(DataType& value){
 		if (_first == _last) return false;
 		value = _buffer[_first];
-		_first = nextPos(_first);
 		return true;
 	}
 
-	bool getButNotTake(DataType& value){
+	bool pull(DataType& value){
 		if (_first == _last) return false;
 		value = _buffer[_first];
+		_first = nextPos(_first);
 		return true;
 	}
 
