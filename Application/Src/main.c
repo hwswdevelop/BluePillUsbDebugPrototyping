@@ -89,6 +89,17 @@ void TIM1_UP_IRQHandler(){
 	nvic_clear_pending_irq(25);
 	counter++;
 	asm("nop");
+	uint32_t timeMs = millis();
+	uint32_t timeS = timeMs / 1000;
+	uint32_t timeM = timeS / 60;
+	uint32_t timeH = timeM / 60;
+	uint32_t day = timeH / 24;
+	timeMs %= 1000;
+	timeS %= 60;
+	timeM %= 60;
+	timeH %= 24;
+
+	printf("Time from board started Day %d Time %02d:%02d:%02d.%03d\n",  day, timeH, timeM, timeS, timeMs);
 }
 
 int main(void)
