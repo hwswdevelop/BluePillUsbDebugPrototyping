@@ -78,14 +78,24 @@ __attribute__((weak)) int _read(int file, char *ptr, int len)
 return len;
 }
 
+
+void writeSerial(const uint8_t* const data, uint16_t length){
+	asm volatile ("movs r3, #3; svc 0;");
+}
+
+
 __attribute__((weak)) int _write(int file, char *ptr, int len)
 {
+#if 0
 	int DataIdx;
 
 	for (DataIdx = 0; DataIdx < len; DataIdx++)
 	{
 		__io_putchar(*ptr++);
 	}
+#else
+	writeSerial(ptr, len);
+#endif
 	return len;
 }
 

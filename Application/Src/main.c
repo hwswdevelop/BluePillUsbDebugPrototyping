@@ -23,6 +23,7 @@
 #include <libopencm3/stm32/flash.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/f1/st_usbfs.h>
+#include <libopencm3/stm32/timer.h>
 #include <libopencm3/usb/usbd.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/cm3/scb.h>
@@ -53,21 +54,22 @@ void test1(){
 	for(int i =0; i < 50; i++){
 		delay(100);
 		uint32_t* const gpioc = (uint32_t*)0x4001100c;
-		*gpioc ^= (1 << 13);
+		GPIOC_ODR ^= GPIO13;
+		GPIOA_ODR ^= GPIO1;
 	}
 }
 
 void test2(){
 	volatile uint32_t prevTime = millis();
-	const uint32_t endTime = prevTime + 500000;
+	const uint32_t endTime = prevTime + 5000;
 	volatile uint32_t currentTime = prevTime;
 	do {
 		currentTime = millis();
 		uint32_t timeDiff = currentTime - prevTime;
 		if (timeDiff > 500UL){
 			prevTime = currentTime;
-			uint32_t* const gpioc = (uint32_t*)0x4001100c;
-			(*gpioc) ^= (1 << 13);
+			GPIOC_ODR ^= GPIO13;
+			GPIOA_ODR ^= GPIO2;
 		}
 	} while(currentTime < endTime);
 }
@@ -75,9 +77,18 @@ void test2(){
 void USART1_IRQHandler(){
 	USART1_SR &= ~USART_SR_TC;
 	nvic_clear_pending_irq(37);
-	uint32_t* const gpioc = (uint32_t*)0x4001100c;
-	//*gpioc ^= (1 << 13);
+	GPIOA_ODR ^= GPIO0;
 	usart_send(USART1, 0x55);
+}
+
+
+volatile uint32_t counter = 0;
+
+void TIM1_UP_IRQHandler(){
+	timer_clear_flag(TIM1, TIM_SR_UIF);
+	nvic_clear_pending_irq(25);
+	counter++;
+	asm("nop");
 }
 
 int main(void)
@@ -86,22 +97,39 @@ int main(void)
 	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO9);
 	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO10);
 	enableDisabeInterrupt(37, false);
+	enableDisabeInterrupt(25, false);
+	timer_disable_irq(TIM1, TIM_DIER_UIE);
 	rcc_periph_reset_pulse(RCC_USART1);
 	rcc_periph_clock_enable(RCC_USART1);
+	rcc_periph_reset_pulse(RCC_TIM1);
+	rcc_periph_clock_enable(RCC_TIM1);
 	usart_set_baudrate(USART1, 115200);
 	USART1_SR &= ~USART_SR_TC;
 	USART1_CR1 |= USART_CR1_UE;
 	usart_enable_tx_complete_interrupt(USART1);
 	USART1_CR1 |= USART_CR1_TE;
+	nvic_clear_pending_irq(37);
 	enableDisabeInterrupt(37, true);
 	usart_send(USART1, 0x55);
+	timer_set_mode(TIM1, 7200, TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
+	timer_enable_irq(TIM1, TIM_DIER_UIE);
+	nvic_clear_pending_irq(25);
+	enableDisabeInterrupt(25, true);
+	timer_enable_counter(TIM1);
 
 	while(true){
-		test1();
-		test2();
-		asm("nop");
-		asm("nop");
-		asm("nop");
-		asm("nop");
+		for(int count = 0; count < 10; count++){
+			printf("Hello world from BluePill  %d\n", count);
+			delay(1);
+			test1();
+			for(int i = 0; i < 100; i++){
+				asm("nop");
+				for(uint32_t j = 0; j < 100; j++){
+					asm("nop");
+				}
+				asm("nop");
+			}
+			test2();
+		}
 	}
 }
