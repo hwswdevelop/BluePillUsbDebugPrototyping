@@ -43,7 +43,7 @@ private:
 	}
 
 private:
-	volatile DataType	_buffer[size] {};
+	DataType			_buffer[size] {};
 	volatile size_t		_first = 0;
 	volatile size_t		_last = 0;
 };

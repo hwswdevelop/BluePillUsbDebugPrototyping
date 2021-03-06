@@ -24,9 +24,6 @@
 uint8_t usbCmdFrame[64];
 uint8_t usbAnsFrame[64];
 
-void usbDataInCallback(usbd_device *usbd_dev, uint8_t ep){
-	asm("nop");
-}
 
 extern "C" void systemMain();
 
@@ -215,7 +212,7 @@ size_t flashCommand(const uint8_t* const inBuf, const size_t inSize, uint8_t* co
 	case FlashCommand::Erase:
 	{
 
-		debugStartEraseLoop();
+		debugStartEraseLoop(cmdHead->address, cmdHead->size);
 #if 0
 		asm volatile ("isb; dsb;");
 		debugStartLocalLoop();
@@ -321,10 +318,12 @@ size_t attachCommand(const uint8_t* const inBuf, const size_t inSize, uint8_t* c
 #include "Usb.h"
 extern usbd_device *usbDevice;
 
+volatile bool usbInitialized = false;
 
 void usbDataOutCallback(usbd_device *usbd_dev, uint8_t ep){
 	uint16_t rcvSize = usbd_ep_read_packet(usbd_dev, ep, usbCmdFrame, BULK_EP_MAXPACKET);
 	if ( 0 == rcvSize ) return;
+	usbInitialized = true;
 
 	DebugCommand command =  static_cast<DebugCommand>(usbCmdFrame[0]);
 	size_t retSize = 0;

@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/nvic.h>
 
 
@@ -24,8 +25,15 @@ enum class DebugHandlerCommand : uint8_t {
 	StartEraseLoop
 };
 
+
+struct FlashEraseParams {
+	uint32_t address;
+	uint32_t size;
+};
+
 extern ArmRegisters context_data;
-static CircularBuffer<DebugHandlerCommand, 32> gCmdQueue {};
+static CircularBuffer<FlashEraseParams, 4> gEraseParams {};
+static CircularBuffer<DebugHandlerCommand, 16> gCmdQueue {};
 static volatile ArmRegisters* const gDebugRegisters = &context_data;
 static volatile ResetHaltState gHaltState = ResetHaltState::Running;
 
@@ -53,8 +61,10 @@ extern "C" bool debugStartLocalLoop(){
 	return result;
 }
 
-extern "C" bool debugStartEraseLoop(){
-	bool result = gCmdQueue.put(DebugHandlerCommand::StartEraseLoop);
+extern "C" bool debugStartEraseLoop(uint32_t address, uint32_t size){
+	const  FlashEraseParams params = { .address = address, .size = size};
+	bool result = gEraseParams.put(params);
+	result &= gCmdQueue.put(DebugHandlerCommand::StartEraseLoop);
 	DEMCR |= DEMCR_MON_PEND;
 	return result;
 }
@@ -68,7 +78,6 @@ extern "C" ResetHaltState debugGetHaltState(){
 }
 
 
-
 void  debugLocalLoop(){
 	while(true){
 		asm volatile("nop");
@@ -76,11 +85,38 @@ void  debugLocalLoop(){
 	}
 }
 
+void debugResetUserPheripherals(){
+	rcc_periph_reset_pulse(RST_TIM2);
+	rcc_periph_reset_pulse(RST_TIM3);
+	rcc_periph_reset_pulse(RST_TIM4);
+	rcc_periph_reset_pulse(RST_WWDG);
+	rcc_periph_reset_pulse(RST_SPI2);
+	rcc_periph_reset_pulse(RST_USART2);
+	rcc_periph_reset_pulse(RST_USART3);
+	rcc_periph_reset_pulse(RST_I2C1);
+	rcc_periph_reset_pulse(RST_I2C2);
+	rcc_periph_reset_pulse(RST_CAN);
+	rcc_periph_reset_pulse(RST_GPIOB);
+	rcc_periph_reset_pulse(RST_GPIOD);
+	rcc_periph_reset_pulse(RST_GPIOE);
+	rcc_periph_reset_pulse(RST_ADC1);
+	rcc_periph_reset_pulse(RST_ADC2);
+	rcc_periph_reset_pulse(RST_TIM1);
+	rcc_periph_reset_pulse(RST_SPI1);
+	rcc_periph_reset_pulse(RST_USART1);
+}
+
+
 void debugDisableUserInterrupts(){
 	for(uint32_t irqNo = 0; irqNo < 256 ; irqNo++){
 		if (irqNo == 19) continue;
 		if (irqNo == 20) continue;
 		nvic_disable_irq(irqNo);
+	}
+	debugResetUserPheripherals();
+	for(uint32_t irqNo = 0; irqNo < 256 ; irqNo++){
+		if (irqNo == 19) continue;
+		if (irqNo == 20) continue;
 		nvic_clear_pending_irq(irqNo);
 	}
 }
@@ -102,18 +138,27 @@ void enableDisableDebugCommandHandler(bool enable){
 #include <libopencm3/stm32/flash.h>
 void flashEraseLoop(){
 	enableDisableDebugCommandHandler(false);
-	const uint32_t lastAddress = userCodeVectorTable + maxFirmwareSize;
-	for (uint32_t address = userCodeVectorTable; address < lastAddress;  address += 0x400){
-		bool erase = false;
-		for(uint32_t checkAddress = address; checkAddress < (address + 0x400); checkAddress +=4 ){
-			uint32_t value = *((uint32_t*)checkAddress);
-			if (value != 0xFFFFFFFF){
-				erase = true;
-				break;
+	FlashEraseParams params;
+	while(gEraseParams.pull(params)){
+		const uint32_t address = params.address;
+		const uint32_t size = params.size;
+		const uint32_t lastAddress = address + size;
+		if ( (address < 0x8004000) || (address > 0x80020000) ) break;
+		if ( lastAddress > 0x80020000 ) break;
+		for(uint32_t curAddress = address; curAddress < lastAddress; curAddress += 0x400){
+			bool erase = false;
+			for(uint32_t checkAddress = curAddress; checkAddress < (curAddress + 0x400); checkAddress +=4 ){
+				uint32_t value = *((uint32_t*)checkAddress);
+				if (value != 0xFFFFFFFF){
+					erase = true;
+					break;
+				}
+			}
+			if (erase) {
+				flash_unlock();
+				flash_erase_page(curAddress);
 			}
 		}
-		flash_unlock();
-		flash_erase_page(address);
 	}
 	enableDisableDebugCommandHandler(true);
 	debugStartLocalLoop();
@@ -123,6 +168,7 @@ void flashEraseLoop(){
 	}
 }
 
+extern volatile bool allowUsbTransfer;
 
 extern "C"  void DebugHandler(ArmRegisters* regs){
 	static uint8_t stepOnThread = 0;
@@ -302,6 +348,7 @@ extern "C"  void DebugHandler(ArmRegisters* regs){
 							regs->xpsr = (regs->common.pc & 0x01) << 24;
 							DEMCR |= DEMCR_MON_STEP;
 							DEMCR &= ~DEMCR_MON_PEND;
+							allowUsbTransfer = true;
 							return;
 							gHaltState = ResetHaltState::Running;
 						}

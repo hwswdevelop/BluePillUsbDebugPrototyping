@@ -87,11 +87,11 @@ extern "C" {
 #define	DEBUG_WIRE printf
 #else
 #  define DEBUG_WARN(...)
-#  define DEBUG_INFO printf
+#  define DEBUG_INFO(...)
 #  define DEBUG_WARN(...)
 #  define DEBUG_INFO(...)
-# define DEBUG_GDB printf
-# define DEBUG_TARGET printf
+# define DEBUG_GDB(...)
+# define DEBUG_TARGET(...)
 # define DEBUG_PROBE(...)
 # define DEBUG_WIRE(...)
 # define DEBUG_GDB_WIRE(...)

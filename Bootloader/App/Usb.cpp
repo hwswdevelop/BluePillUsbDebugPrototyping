@@ -93,6 +93,14 @@ const usb_endpoint_descriptor usbEndpointDescr[] = {
 		.bmAttributes = USB_ENDPOINT_ATTR_BULK,
 		.wMaxPacketSize = BULK_EP_MAXPACKET,
 		.bInterval = 1,
+	},
+	{
+		.bLength = USB_DT_ENDPOINT_SIZE,
+		.bDescriptorType = USB_DT_ENDPOINT,
+		.bEndpointAddress = 0x82,
+		.bmAttributes = USB_ENDPOINT_ATTR_BULK,
+		.wMaxPacketSize = BULK_EP_MAXPACKET,
+		.bInterval = 1,
 	}
 };
 
@@ -102,7 +110,7 @@ const usb_interface_descriptor usbIfaceDescr[] = {
 		.bDescriptorType = USB_DT_INTERFACE,
 		.bInterfaceNumber = 0,
 		.bAlternateSetting = 0,
-		.bNumEndpoints = 2,
+		.bNumEndpoints = 3,
 		.bInterfaceClass = 0xFF,
 		.bInterfaceSubClass = 0x00,
 		.bInterfaceProtocol = 0x00,
@@ -158,20 +166,29 @@ const usbd_msft_comp_id usbMsftWinUsb = {
 const char *usbStrings[] = {
 	"hwswdevelop@gmail.com",
 	"STM32F103",
-	"Debug",
+	"evgeny@vrnnet.ru",
 	"hwswdevelop@gmail.com",
+	"evgeny@vrnnet.ru",
 	"hwswdevelop@gmail.com",
-	"hwswdevelop@gmail.com",
-	"hwswdevelop@gmail.com",
+	"evgeny@vrnnet.ru",
 };
 
 uint8_t usbControlBuffer[5*64];
+
+extern void usbSerialDataInCallback(usbd_device *usbd_dev, uint8_t ep);
+
+void usbDataInCallback(usbd_device *usbd_dev, uint8_t ep){
+	asm("nop");
+}
+
 
 void usbSetConfigCallback(usbd_device *usbd_dev, uint16_t wValue){
 	usbd_ep_setup(usbd_dev, 0x01, USB_ENDPOINT_ATTR_BULK, BULK_EP_MAXPACKET,
 				usbDataOutCallback);
 	usbd_ep_setup(usbd_dev, 0x81, USB_ENDPOINT_ATTR_BULK, BULK_EP_MAXPACKET,
-				usbDataInCallback);
+			usbDataInCallback);
+	usbd_ep_setup(usbd_dev, 0x82, USB_ENDPOINT_ATTR_BULK, BULK_EP_MAXPACKET,
+				usbSerialDataInCallback);
 }
 
 

@@ -166,7 +166,7 @@ extern "C" bool debugHaltRequest();
 extern "C" bool debugResume(bool step);
 extern "C" bool debugStartFirmware();
 extern "C" bool debugStartLocalLoop();
-extern "C" bool debugStartEraseLoop();
+extern "C" bool debugStartEraseLoop(uint32_t address, uint32_t size);
 extern "C" volatile ArmRegisters* const debugGetRegs();
 
 extern "C" __attribute__((naked)) void debug_handler();

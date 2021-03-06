@@ -24,18 +24,18 @@ extern "C" void systemInit(){
 	rcc_periph_clock_enable(RCC_USB);
 	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO11);
 	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO12);
-	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, GPIO15);
+	//gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, GPIO15);
 	gpio_set_mode(GPIOC, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, GPIO13);
-	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, ( GPIO0 | GPIO1 | GPIO2 | GPIO3 ) );
+	//gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, ( GPIO0 | GPIO1 | GPIO2 | GPIO3 ) );
 
 	AFIO_MAPR = AFIO_MAPR_SWJ_CFG_JTAG_OFF_SW_ON;
-	GPIOA_BRR = GPIO15;
+	//GPIOA_BRR = GPIO15;
 	GPIOC_BSRR = GPIO13;
 
 	// Configure interrupt handlers priority
 	for(int i = 0; i < NVIC_IRQ_COUNT; i++){
 		nvic_disable_irq(i);
-		nvic_set_priority(i, 0x20);
+		nvic_set_priority(i, 0xF0);
 	}
 
 	systick_set_frequency(1000, 72000000);
