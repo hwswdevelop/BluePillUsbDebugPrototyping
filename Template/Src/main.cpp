@@ -3,6 +3,9 @@
  *
  *  Created on: Mar 6, 2021
  *      Author: Evgeny
+ *
+ * This is an template of Arduino-like project
+ *
  */
 
 
