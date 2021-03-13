@@ -1,2 +1,0 @@
-delay.cpp:9:6:void delay(uint32_t)	24	static
-delay.cpp:16:6:void enableDisabeInterrupt(uint32_t, bool)	16	static,ignoring_inline_asm

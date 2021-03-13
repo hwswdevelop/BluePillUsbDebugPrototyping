@@ -1,8 +1,0 @@
-"Src/main.o"
-"Startup/startup_stm32f103c8tx.o"
-"System/Core/gpio.o"
-"System/delay.o"
-"System/mainInternal.o"
-"System/svccalls.o"
-"System/syscalls.o"
-"System/sysmem.o"

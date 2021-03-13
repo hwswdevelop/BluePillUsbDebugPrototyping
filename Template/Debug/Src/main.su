@@ -1,9 +1,0 @@
-main.cpp:15:6:void setup()	8	static
-main.cpp:21:6:void loop()	56	static
-gpio.h:116:21:static void GpioPin<GpioAddr, pinNo>::mode(GpioMode, GpioOutputSpeed) [with long unsigned int GpioAddr = 1073811456; unsigned char pinNo = 13]	16	static
-gpio.h:116:21:static void GpioPin<GpioAddr, pinNo>::mode(GpioMode, GpioOutputSpeed) [with long unsigned int GpioAddr = 1073809408; unsigned char pinNo = 0]	16	static
-gpio.h:143:21:static void GpioPin<GpioAddr, pinNo>::reset() [with long unsigned int GpioAddr = 1073811456; unsigned char pinNo = 13]	4	static,ignoring_inline_asm
-gpio.h:138:21:static void GpioPin<GpioAddr, pinNo>::set() [with long unsigned int GpioAddr = 1073809408; unsigned char pinNo = 0]	4	static,ignoring_inline_asm
-gpio.h:148:21:static void GpioPin<GpioAddr, pinNo>::invert() [with long unsigned int GpioAddr = 1073809408; unsigned char pinNo = 0]	4	static,ignoring_inline_asm
-gpio.h:143:21:static void GpioPin<GpioAddr, pinNo>::reset() [with long unsigned int GpioAddr = 1073809408; unsigned char pinNo = 0]	4	static,ignoring_inline_asm
-gpio.h:138:21:static void GpioPin<GpioAddr, pinNo>::set() [with long unsigned int GpioAddr = 1073811456; unsigned char pinNo = 13]	4	static,ignoring_inline_asm
