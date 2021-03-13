@@ -133,7 +133,6 @@ struct GpioPin {
 
 	static inline bool get(const GpioMode mode) {
 		return (reinterpret_cast<volatile GPIO* const>(GpioAddress)->IDR & GpioPinMask);
-		asm volatile("dsb;");
 	}
 
 	static inline void set() {
@@ -206,6 +205,4 @@ constexpr const GpioPin<GPIOC_BASE, 12> PC12;
 constexpr const GpioPin<GPIOC_BASE, 13> PC13;
 constexpr const GpioPin<GPIOC_BASE, 14> PC14;
 constexpr const GpioPin<GPIOC_BASE, 15> PC15;
-
-
 

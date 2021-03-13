@@ -399,8 +399,8 @@ Discarded input sections
  .debug_macro   0x0000000000000000       0x6a System/Core/gpio.o
  .debug_macro   0x0000000000000000      0x1df System/Core/gpio.o
  .debug_macro   0x0000000000000000       0x19 System/Core/gpio.o
- .debug_line    0x0000000000000000      0x68b System/Core/gpio.o
- .debug_str     0x0000000000000000     0xba1c System/Core/gpio.o
+ .debug_line    0x0000000000000000      0x691 System/Core/gpio.o
+ .debug_str     0x0000000000000000     0xba22 System/Core/gpio.o
  .comment       0x0000000000000000       0x54 System/Core/gpio.o
  .ARM.attributes
                 0x0000000000000000       0x33 System/Core/gpio.o
@@ -1483,30 +1483,30 @@ LOAD c:/st/stm32cubeide_1.6.0/stm32cubeide/plugins/com.st.stm32cube.ide.mcu.exte
  .debug_macro   0x0000000000004254       0xff System/sysmem.o
  .debug_macro   0x0000000000004353      0x23b System/sysmem.o
 
-.debug_line     0x0000000000000000     0x22ce
- .debug_line    0x0000000000000000      0xa70 Src/main.o
- .debug_line    0x0000000000000a70       0x84 Startup/startup_stm32f103c8tx.o
- .debug_line    0x0000000000000af4      0x3c2 System/delay.o
- .debug_line    0x0000000000000eb6      0x580 System/mainInternal.o
- .debug_line    0x0000000000001436       0x49 System/svccalls.o
- .debug_line    0x000000000000147f      0x915 System/syscalls.o
- .debug_line    0x0000000000001d94      0x53a System/sysmem.o
+.debug_line     0x0000000000000000     0x22da
+ .debug_line    0x0000000000000000      0xa7c Src/main.o
+ .debug_line    0x0000000000000a7c       0x84 Startup/startup_stm32f103c8tx.o
+ .debug_line    0x0000000000000b00      0x3c2 System/delay.o
+ .debug_line    0x0000000000000ec2      0x580 System/mainInternal.o
+ .debug_line    0x0000000000001442       0x49 System/svccalls.o
+ .debug_line    0x000000000000148b      0x915 System/syscalls.o
+ .debug_line    0x0000000000001da0      0x53a System/sysmem.o
 
-.debug_str      0x0000000000000000    0x11876
- .debug_str     0x0000000000000000     0xfcbf Src/main.o
-                                      0x100bf (size before relaxing)
- .debug_str     0x000000000000fcbf       0x31 Startup/startup_stm32f103c8tx.o
-                                         0x59 (size before relaxing)
- .debug_str     0x000000000000fcf0       0x72 System/delay.o
-                                       0x43bc (size before relaxing)
- .debug_str     0x000000000000fd62       0x28 System/mainInternal.o
-                                       0x87b1 (size before relaxing)
- .debug_str     0x000000000000fd8a       0x15 System/svccalls.o
-                                         0x4b (size before relaxing)
- .debug_str     0x000000000000fd9f     0x1a6e System/syscalls.o
-                                       0x8ecd (size before relaxing)
- .debug_str     0x000000000001180d       0x69 System/sysmem.o
-                                       0x6252 (size before relaxing)
+.debug_str      0x0000000000000000    0x1187c
+ .debug_str     0x0000000000000000     0xfcc5 Src/main.o
+                                      0x100c5 (size before relaxing)
+ .debug_str     0x000000000000fcc5       0x31 Startup/startup_stm32f103c8tx.o
+                                         0x5f (size before relaxing)
+ .debug_str     0x000000000000fcf6       0x72 System/delay.o
+                                       0x43c2 (size before relaxing)
+ .debug_str     0x000000000000fd68       0x28 System/mainInternal.o
+                                       0x87b7 (size before relaxing)
+ .debug_str     0x000000000000fd90       0x15 System/svccalls.o
+                                         0x51 (size before relaxing)
+ .debug_str     0x000000000000fda5     0x1a6e System/syscalls.o
+                                       0x8ed3 (size before relaxing)
+ .debug_str     0x0000000000011813       0x69 System/sysmem.o
+                                       0x6258 (size before relaxing)
 
 .comment        0x0000000000000000       0x53
  .comment       0x0000000000000000       0x53 Src/main.o
