@@ -7,7 +7,7 @@
 
 typedef uint32_t MemoryAddress;
 typedef uint32_t TargetRegister;
-typedef uint8_t  AccessSize;
+typedef uint32_t  AccessSize;
 
 
 enum class DebugCommand : uint8_t {

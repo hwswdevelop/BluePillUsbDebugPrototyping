@@ -51,9 +51,6 @@
     <ClCompile Include="DbgCommands.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="stm32DbgCommands.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Gdb\stm32f1.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>

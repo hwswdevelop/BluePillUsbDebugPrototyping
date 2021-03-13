@@ -88,14 +88,14 @@ static int stm32f1_flash_write(struct target_flash *f,
 #define FLASHSIZE_F0  0x1FFFF7CC
 
 
-void stm32_flash_unlock(target * t, uint32_t address, size_t size);
-void stm32_flash_erase(target* t, uint32_t address, size_t size);
-void stm32_flash_wrtie(target * t, uint32_t address, uint8_t * data, size_t size);
+void stm32_flash_unlock(target * t, const uint32_t address, const size_t size);
+void stm32_flash_erase(target* t, const uint32_t address, const size_t size);
+void stm32_flash_wrtie(target * t, const uint32_t address, const uint8_t * data, const size_t size);
 void stm32_flash_done(target * t);
 int stm32f1_flash_done(struct target_flash* f);
 
 static void stm32f1_add_flash(target *t,
-                              uint32_t addr, size_t length, size_t erasesize)
+                              const uint32_t addr, const size_t length, const size_t erasesize)
 {
 	struct target_flash *f = calloc(1, sizeof(*f));
 	if (!f) {			/* calloc failed: heap exhaustion */
@@ -124,13 +124,13 @@ bool stm32f1_probe(target *t)
 	return true;
 }
 
-static void stm32f1_flash_unlock(target *t, uint32_t bank_offset)
+static void stm32f1_flash_unlock(target *t, const uint32_t bank_offset)
 {
 	stm32_flash_unlock(t, bank_offset, 4);
 }
 
 static int stm32f1_flash_erase(struct target_flash *f,
-                               target_addr addr, size_t len)
+                               const target_addr addr, const size_t len)
 {
 	target *t = f->t;
 	stm32_flash_erase(t, addr, len);
@@ -138,7 +138,7 @@ static int stm32f1_flash_erase(struct target_flash *f,
 }
 
 static int stm32f1_flash_write(struct target_flash *f,
-                               target_addr dest, const uint8_t *src, size_t len)
+                               const target_addr dest, const uint8_t *src, const size_t len)
 {
 	target *t = f->t;
 	stm32_flash_wrtie(t, dest, src, len);

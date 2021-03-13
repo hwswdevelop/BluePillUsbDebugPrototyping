@@ -23,7 +23,7 @@ extern "C" void stm32_regs_read(target* t, void* data) {
 	TargetSTM32F1* device = (TargetSTM32F1*)(t->priv);
 	uint32_t* regs = (uint32_t*)data;
 	auto readRegs = device->regsRead(0, 16);
-	memcpy(data, readRegs.data(), readRegs.size() * sizeof(TargetRegister) );
+	std::copy(readRegs.begin(), readRegs.end(), reinterpret_cast<uint8_t*>(data) );
 	readRegs.clear();
 }
 
@@ -37,26 +37,25 @@ extern "C" size_t stm32_reg_read(target* t, int reg, void* data, size_t max) {
 	static const int REG_PSP = 0x12;
 	if (reg <= REG_xPSR) {
 		auto readRegs = device->regsRead(reg, 1);
-		memcpy(data, readRegs.data(), sizeof(TargetRegister) );
+		std::copy(readRegs.begin(), readRegs.end(), reinterpret_cast<uint8_t*>(data));
 		readRegs.clear();
 		return sizeof(TargetRegister);
 	}
 	else if ((reg == REG_MSP) || (reg == REG_PSP)) {
 		auto readRegs = device->regsRead(REG_SP, 1);
-		memcpy(data, readRegs.data(), sizeof(TargetRegister) );
+		std::copy(readRegs.begin(), readRegs.end(), reinterpret_cast<uint8_t*>(data));
 		readRegs.clear();
 		return sizeof(TargetRegister);
 	}
 	else if (reg == REG_CPPSR) {
 		auto readRegs = device->regsRead(REG_xPSR, 1);
-		memcpy(data, readRegs.data(), sizeof(TargetRegister) );
+		std::copy(readRegs.begin(), readRegs.end(), reinterpret_cast<uint8_t*>(data));
 		readRegs.clear();
 		return sizeof(TargetRegister);
 	}
 	else {
 		DEBUG_PROBE("**************** Faild to read reg 0x%08X *******************\n", reg);
 		memset(data, 0x00, max);
-		//*((uint32_t*)data) = reg | 0xFF000000;
 		return sizeof(TargetRegister);
 	}
 }
@@ -67,8 +66,8 @@ extern "C" void stm32_mem_read(target* t, void* dest, target_addr src, size_t le
 	size_t addrAccSize = (src & 0x01) ? 1 : ((src & 0x02) ? 2 : 4);
 	size_t szAccSize = (len & 0x01) ? 1 : ((len & 0x02) ? 2 : 4);
 	size_t accSize = (addrAccSize < szAccSize) ? addrAccSize : szAccSize;
-	auto readMem = device->memRead(src, accSize, len / accSize);
-	memcpy(dest, readMem.data(), readMem.size());
+	auto readMem = device->memRead(src, accSize, static_cast<AccessSize>(len / accSize) );
+	std::copy(readMem.begin(), readMem.end(), reinterpret_cast<uint8_t*>(dest) );
 	readMem.clear();
 }
 
@@ -82,8 +81,8 @@ extern "C" size_t stm32_reg_write(target* t, int reg, const void* data, size_t s
 	static const int REG_MSP = 0x11;
 	static const int REG_PSP = 0x12;
 
-	std::vector<TargetRegister> regs(size / sizeof(TargetRegister) );
-	memcpy(regs.data(), data, size);
+	std::vector<TargetRegister> regs;
+	regs.assign(reinterpret_cast<TargetRegister*>(&data), reinterpret_cast<TargetRegister*>(&data) + (size / sizeof(TargetRegister)));
 
 	if (reg <= REG_xPSR) {
 		device->regsWrite(reg, regs);
@@ -110,8 +109,8 @@ extern "C" size_t stm32_reg_write(target* t, int reg, const void* data, size_t s
 extern "C" void stm32_mem_write(target* t, target_addr dest, const void* src, size_t len) {
 	DEBUG_TARGET("stm32_mem_write address=0x%X, size=%d\n", (uint32_t)dest, len);
 	TargetSTM32F1* device = (TargetSTM32F1*)(t->priv);
-	std::vector<uint8_t> data(len);
-	memcpy(data.data(), src, len);
+	std::vector<uint8_t> data;
+	data.assign( reinterpret_cast<uint8_t*>(&data), reinterpret_cast<uint8_t*>(&data) + len );
 	size_t addrAccSize = (dest & 0x01) ? 1 : ((dest & 0x02) ? 2 : 4);
 	size_t szAccSize = (len & 0x01) ? 1 : ((len & 0x02) ? 2 : 4);
 	size_t accSize = (addrAccSize < szAccSize) ? addrAccSize : szAccSize;
@@ -155,7 +154,7 @@ extern "C" int stm32_breakwatch_set(target* t, struct breakwatch* bw) {
 		DEBUG_PROBE("*** Enable breakpoint at 0x%X size = %d\n", bw->addr, bw->size);
 		DEBUG_PROBE("*********************************************\n");
 		bp[count].address = bw->addr;
-		bp[count].size = bw->size;
+		bp[count].size = static_cast<uint8_t>(bw->size);
 		bp[count].type = (BreakpointType)bw->type;
 		bp[count].reserved = 0;
 		count++;
@@ -178,7 +177,7 @@ extern "C" int stm32_breakwatch_clear(target* t, struct breakwatch* bw) {
 		DEBUG_PROBE("*** Disable breakpoint at 0x%X size = %d\n", bw->addr, bw->size);
 		DEBUG_PROBE("********************************************\n");
 		bp[count].address = bw->addr;
-		bp[count].size = bw->size;
+		bp[count].size = static_cast<uint8_t>(bw->size);
 		bp[count].type = (BreakpointType)bw->type;
 		bp[count].reserved = 0;
 		count++;
@@ -235,7 +234,7 @@ extern "C" void stm32_flash_erase(target * t, uint32_t address, size_t size) {
 	device->flashCmd(FlashCommand::Erase, address, size);
 }
 
-extern "C" void stm32_flash_wrtie(target * t, uint32_t address, uint8_t* data, size_t size) {
+extern "C" void stm32_flash_wrtie(target * t, const uint32_t address, const uint8_t* data, const size_t size) {
 	DEBUG_TARGET("stm32_flash_wrtie address = 0x%X size=%d\n", address, size);
 	TargetSTM32F1* device = (TargetSTM32F1*)(t->priv);
 	std::vector<uint8_t> flashData;
@@ -269,6 +268,7 @@ void getSerialDataThread(target* t) {
 		std::cout << data;
 	}
 }
+
 extern "C" void gdbInit() {
 	target_list_free();
 
@@ -281,7 +281,6 @@ extern "C" void gdbInit() {
 		auto device = new TargetSTM32F1(*targetInterface);
 		t->priv = (void*)device;
 		t->priv_free = stm32_priv_delete;
-
 		t->regs_size = 16 * sizeof(uint32_t);
 		t->halt_poll = stm32_halt_poll;
 		t->regs_read = stm32_regs_read;

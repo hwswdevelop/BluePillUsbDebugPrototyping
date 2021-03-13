@@ -169,7 +169,8 @@ std::vector<uint8_t> TargetSTM32F1::memRead(const MemoryAddress address, const A
 		if ( cmdHead->align != ansHead->align ) break;
 		if ( 0 == ansHead->byteCount ) break;
 		size_t readCount = (ansHead->byteCount < remain) ? ansHead->byteCount : remain;
-		memcpy(data.data() + offset, _in + sizeof(MemReadWriteAnsHead), readCount);
+		//memcpy(data.data() + offset, _in + sizeof(MemReadWriteAnsHead), readCount);
+		std::copy(_in + sizeof(MemReadWriteAnsHead), _in + sizeof(MemReadWriteAnsHead) + readCount, data.data() + offset);
 		offset += ansHead->byteCount;
 	}
 	if ( offset < data.size() ) data.resize(offset);
@@ -185,7 +186,8 @@ size_t TargetSTM32F1::memWrite(const MemoryAddress address, const AccessSize acc
 		size_t cmdHeadSize = MakeHead( _out, _maxPacketSize ).memWriteCmd(address + offset, accessSize, remain / accessSize);
 		if (0 == cmdHeadSize) break;
 		MemReadWriteCmdHead* const cmdHead = reinterpret_cast<MemReadWriteCmdHead*>(_out);
-		memcpy(_out + cmdHeadSize, dataToWrite.data() + offset, cmdHead->byteCount);
+		//memcpy(_out + cmdHeadSize, dataToWrite.data() + offset, cmdHead->byteCount);
+		std::copy(dataToWrite.data() + offset, dataToWrite.data() + offset + cmdHead->byteCount, _out + cmdHeadSize);
 		const size_t rxSize = sendAndReceive(cmdHeadSize + cmdHead->byteCount);		
 		MemReadWriteAnsHead* const ansHead = reinterpret_cast<MemReadWriteAnsHead*>(_in);
 		if (cmdHead->cmd != ansHead->cmd) break;
@@ -214,7 +216,12 @@ std::vector<TargetRegister> TargetSTM32F1::regsRead(const uint16_t regIndex, con
 		if (cmdHead->cmd != ansHead->cmd) break;
 		if (cmdHead->regIndex != ansHead->regIndex) break;
 		if (cmdHead->regCount < ansHead->regCount) break;
-		memcpy(reinterpret_cast<uint8_t*>(regs.data()) + offset, _in + sizeof(RegReadWriteAnsHead), ansHead->regCount * regSize);
+		//memcpy(reinterpret_cast<uint8_t*>(regs.data()) + offset, _in + sizeof(RegReadWriteAnsHead), ansHead->regCount * regSize);
+		std::copy(
+			_in + sizeof(RegReadWriteAnsHead),
+			_in + sizeof(RegReadWriteAnsHead) + ansHead->regCount * regSize,
+			reinterpret_cast<uint8_t*>( regs.data() )
+		);
 		offset += ansHead->regCount * regSize;
 	}
 	if (offset < (regCount * regSize)) regs.resize( offset / regSize );
@@ -231,7 +238,12 @@ size_t TargetSTM32F1::regsWrite(const uint16_t regIndex, const std::vector<Targe
 		const size_t remain = totalBytesToWrite - offset;
 		const size_t cmdHeadSize = MakeHead( _out, _maxPacketSize ).regsWrite( offset / regSize + regIndex, regsToWrite );
 		RegReadWriteCmdHead* const cmdHead = reinterpret_cast<RegReadWriteCmdHead*>(_out);
-		memcpy(_out + cmdHeadSize, reinterpret_cast<const uint8_t*>(regsToWrite.data()) + offset, cmdHead->regCount * regSize);
+		//memcpy(_out + cmdHeadSize, reinterpret_cast<const uint8_t*>(regsToWrite.data()) + offset, cmdHead->regCount * regSize);
+		std::copy(
+			reinterpret_cast<const uint8_t*>(regsToWrite.data()) + offset,
+			reinterpret_cast<const uint8_t*>(regsToWrite.data()) + offset + cmdHead->regCount * regSize,
+			_out + cmdHeadSize
+		);		
 		const size_t rxSize = sendAndReceive(cmdHeadSize + cmdHead->regCount * regSize);
 		if ( rxSize < sizeof(RegReadWriteAnsHead) ) break;
 		RegReadWriteAnsHead* const ansHead = reinterpret_cast<RegReadWriteAnsHead*>(_in);
@@ -251,7 +263,12 @@ size_t TargetSTM32F1::breakpointsSetClear( const std::vector<Breakpoint> breakpo
 	while (breakpointIndex < breakpointCount) {
 		size_t cmdHeadSize = MakeHead(_out, _maxPacketSize).breakpointSetClear(breakpoints, set);
 		BreakpointCmdHead* const cmdHead = reinterpret_cast<BreakpointCmdHead*>(_out);
-		memcpy(_out + cmdHeadSize, breakpoints.data() + breakpointIndex, sizeof(Breakpoint) * cmdHead->count);
+		//memcpy(_out + cmdHeadSize, breakpoints.data() + breakpointIndex, sizeof(Breakpoint) * cmdHead->count);
+		std::copy(
+			reinterpret_cast<const uint8_t*>( breakpoints.data() + breakpointIndex ),
+			reinterpret_cast<const uint8_t*>( breakpoints.data() + breakpointIndex + sizeof(Breakpoint) * cmdHead->count ),
+			_out + cmdHeadSize
+		);	
 		BreakpointAnsHead* const ansHead = reinterpret_cast<BreakpointAnsHead*>(_in);
 		const size_t rxSize = sendAndReceive(cmdHeadSize + cmdHead->count * sizeof(Breakpoint));
 		if ( rxSize < sizeof(BreakpointAnsHead) ) break;
@@ -285,12 +302,14 @@ bool TargetSTM32F1::flashCmd(const FlashCommand command, const MemoryAddress add
 	return ansHead->status;
 }
 
-#include <thread>
-#include <chrono>
 std::string TargetSTM32F1::getSerialData() {
 	std::string str;
-	str.resize(_maxPacketSize + 1, 0);
-	const size_t rxSize = _interface.readSerial((uint8_t*)(str.c_str()), _maxPacketSize);
+	uint8_t* data = new uint8_t[_maxPacketSize + 1];
+	const size_t rxSize = _interface.readSerial( data, _maxPacketSize );
+	if (rxSize > 0) {
+		str.assign(data, data + rxSize);
+	}
+	delete[] data;
 	str.resize(rxSize);
 	return str;
 }

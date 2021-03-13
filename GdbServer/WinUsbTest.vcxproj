@@ -103,8 +103,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>Gdb\include;Gdb\target;Gdb\platforms;Gdb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -155,7 +156,6 @@
     <ClCompile Include="Gdb\stm32f1.c" />
     <ClCompile Include="Gdb\target.c" />
     <ClCompile Include="Gdb\utils.c" />
-    <ClCompile Include="stm32DbgCommands.cpp" />
     <ClCompile Include="TargetInterface\WinUsbTargetInterface.cpp" />
     <ClCompile Include="TargetsInit.cpp" />
     <ClCompile Include="Target\TargetSTM32F1.cpp" />
